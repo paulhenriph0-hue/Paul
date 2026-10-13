@@ -20,7 +20,9 @@ struct FoodSearchView: View {
     private var filtered: [FoodItem] {
         guard !searchText.isEmpty else { return foods }
         return foods.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText) || $0.brand.localizedCaseInsensitiveContains(searchText)
+            $0.name.localizedCaseInsensitiveContains(searchText)
+                || $0.brand.localizedCaseInsensitiveContains(searchText)
+                || (!$0.barcode.isEmpty && $0.barcode.hasPrefix(searchText))
         }
     }
 
@@ -42,6 +44,12 @@ struct FoodSearchView: View {
             List {
                 if searchText.isEmpty {
                     Section {
+                        NavigationLink {
+                            BarcodeLookupView(meal: meal, date: date) { dismiss() }
+                        } label: {
+                            Label("Barcode scannen", systemImage: "barcode.viewfinder")
+                                .font(.headline)
+                        }
                         NavigationLink {
                             QuickAddView(meal: meal, date: date) { dismiss() }
                         } label: {
@@ -82,6 +90,14 @@ struct FoodSearchView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Abbrechen") { dismiss() }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    NavigationLink {
+                        BarcodeLookupView(meal: meal, date: date) { dismiss() }
+                    } label: {
+                        Image(systemName: "barcode.viewfinder")
+                    }
+                    .accessibilityLabel("Barcode scannen")
                 }
             }
         }

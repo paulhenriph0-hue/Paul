@@ -82,6 +82,8 @@ struct FoodLibraryView: View {
 /// Lebensmittel anlegen oder bearbeiten (Werte pro 100 g).
 struct FoodEditorView: View {
     let food: FoodItem?
+    /// Wird nach dem Sichern aufgerufen. Ist es gesetzt, schließt sich die Ansicht nicht selbst.
+    var onSaved: ((FoodItem) -> Void)?
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
@@ -91,14 +93,20 @@ struct FoodEditorView: View {
     @State private var per100g: MacroTotals
     @State private var servingGrams: Double
     @State private var isFavorite: Bool
+    @State private var barcode: String
 
-    init(food: FoodItem?) {
+    /// - Parameters:
+    ///   - food: Zu bearbeitendes Lebensmittel oder `nil` für ein neues.
+    ///   - draft: Vorbefüllung für ein neues Lebensmittel (z. B. aus einem Barcode-Treffer).
+    init(food: FoodItem?, draft: FoodDraft? = nil, onSaved: ((FoodItem) -> Void)? = nil) {
         self.food = food
-        _name = State(initialValue: food?.name ?? "")
-        _brand = State(initialValue: food?.brand ?? "")
-        _per100g = State(initialValue: food?.per100g ?? MacroTotals())
-        _servingGrams = State(initialValue: food?.servingGrams ?? 100)
+        self.onSaved = onSaved
+        _name = State(initialValue: food?.name ?? draft?.name ?? "")
+        _brand = State(initialValue: food?.brand ?? draft?.brand ?? "")
+        _per100g = State(initialValue: food?.per100g ?? draft?.per100g ?? MacroTotals())
+        _servingGrams = State(initialValue: food?.servingGrams ?? draft?.servingGrams ?? 100)
         _isFavorite = State(initialValue: food?.isFavorite ?? false)
+        _barcode = State(initialValue: food?.barcode ?? draft?.barcode ?? "")
     }
 
     private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -120,6 +128,18 @@ struct FoodEditorView: View {
                 TextField("Name", text: $name)
                 TextField("Marke (optional)", text: $brand)
                 Toggle("Favorit", isOn: $isFavorite)
+            }
+
+            Section {
+                HStack {
+                    Image(systemName: "barcode")
+                        .foregroundStyle(.secondary)
+                    TextField("Barcode (optional)", text: $barcode)
+                        .keyboardType(.numberPad)
+                        .monospacedDigit()
+                }
+            } footer: {
+                Text("Mit Barcode wird das Lebensmittel beim Scannen sofort erkannt.")
             }
 
             Section {
@@ -177,7 +197,12 @@ struct FoodEditorView: View {
         target.fatPer100g = per100g.fat
         target.servingGrams = servingGrams
         target.isFavorite = isFavorite
+        target.barcode = barcode.filter { !$0.isWhitespace }
         context.saveIfNeeded()
-        dismiss()
+        if let onSaved {
+            onSaved(target)
+        } else {
+            dismiss()
+        }
     }
 }

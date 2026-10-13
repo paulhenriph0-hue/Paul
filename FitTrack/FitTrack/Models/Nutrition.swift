@@ -15,6 +15,8 @@ final class FoodItem {
     var isFavorite: Bool
     var isCustom: Bool
     var createdAt: Date
+    /// EAN/UPC-Barcode, leer wenn unbekannt.
+    var barcode: String = ""
 
     @Relationship(deleteRule: .nullify, inverse: \FoodEntry.food)
     var entries: [FoodEntry] = []
@@ -28,10 +30,12 @@ final class FoodItem {
         fatPer100g: Double,
         servingGrams: Double = 100,
         isFavorite: Bool = false,
-        isCustom: Bool = false
+        isCustom: Bool = false,
+        barcode: String = ""
     ) {
         self.name = name
         self.brand = brand
+        self.barcode = barcode
         self.caloriesPer100g = caloriesPer100g
         self.proteinPer100g = proteinPer100g
         self.carbsPer100g = carbsPer100g

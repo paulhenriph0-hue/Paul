@@ -67,6 +67,58 @@ final class FormattingTests: XCTestCase {
     }
 }
 
+final class OpenFoodFactsTests: XCTestCase {
+    private func data(_ json: String) -> Data { Data(json.utf8) }
+
+    func testParsesCompleteProduct() throws {
+        let json = """
+        {"code":"3017620422003","status":1,"product":{
+          "product_name":"Nutella","product_name_de":"Nutella Nuss-Nougat-Creme",
+          "brands":"Ferrero, Nutella","serving_quantity":15,
+          "nutriments":{"energy-kcal_100g":539,"proteins_100g":6.3,"carbohydrates_100g":57.5,"fat_100g":30.9}}}
+        """
+        let draft = try XCTUnwrap(OpenFoodFactsClient.parse(data(json), barcode: "3017620422003"))
+        XCTAssertEqual(draft.name, "Nutella Nuss-Nougat-Creme")
+        XCTAssertEqual(draft.brand, "Ferrero")
+        XCTAssertEqual(draft.barcode, "3017620422003")
+        XCTAssertEqual(draft.per100g, MacroTotals(calories: 539, protein: 6.3, carbs: 57.5, fat: 30.9))
+        XCTAssertEqual(draft.servingGrams, 15)
+        XCTAssertTrue(draft.hasNutrition)
+    }
+
+    func testConvertsKilojoulesAndStringValues() throws {
+        let json = """
+        {"status":1,"product":{"product_name":"Testmüsli",
+          "nutriments":{"energy_100g":"1590","proteins_100g":"9,5","carbohydrates_100g":60,"fat_100g":6}}}
+        """
+        let draft = try XCTUnwrap(OpenFoodFactsClient.parse(data(json), barcode: "4000000000001"))
+        XCTAssertEqual(draft.per100g.calories, 380)
+        XCTAssertEqual(draft.per100g.protein, 9.5)
+        XCTAssertEqual(draft.servingGrams, 100)
+        XCTAssertEqual(draft.brand, "")
+    }
+
+    func testMissingNutritionIsFlagged() throws {
+        let json = #"{"status":1,"product":{"product_name":"Unbekannt","nutriments":{}}}"#
+        let draft = try XCTUnwrap(OpenFoodFactsClient.parse(data(json), barcode: "12345678"))
+        XCTAssertFalse(draft.hasNutrition)
+    }
+
+    func testUnknownProductReturnsNil() {
+        XCTAssertNil(OpenFoodFactsClient.parse(data(#"{"status":0,"status_verbose":"product not found"}"#), barcode: "12345678"))
+        XCTAssertNil(OpenFoodFactsClient.parse(data(#"{"status":1,"product":{"product_name":"  "}}"#), barcode: "12345678"))
+        XCTAssertNil(OpenFoodFactsClient.parse(data("kein json"), barcode: "12345678"))
+    }
+
+    func testBarcodeValidation() {
+        XCTAssertTrue(OpenFoodFactsClient.isValidBarcode("3017620422003"))
+        XCTAssertTrue(OpenFoodFactsClient.isValidBarcode("96385074"))
+        XCTAssertFalse(OpenFoodFactsClient.isValidBarcode("1234567"))
+        XCTAssertFalse(OpenFoodFactsClient.isValidBarcode("ABC12345678"))
+        XCTAssertFalse(OpenFoodFactsClient.isValidBarcode(""))
+    }
+}
+
 @MainActor
 final class DataTests: XCTestCase {
     private var container: ModelContainer!

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Summe aus Kalorien und Makronährstoffen.
-struct MacroTotals: Equatable {
+struct MacroTotals: Hashable {
     var calories: Double = 0
     var protein: Double = 0
     var carbs: Double = 0

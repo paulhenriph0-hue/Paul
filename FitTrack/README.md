@@ -10,7 +10,7 @@ Native iPhone-Fitness-App mit **Swift**, **SwiftUI**, **SwiftData** und **Swift 
 | **Training** | Freies Training oder Start aus Plan, Sätze mit Gewicht/Wiederholungen, „Vorher“-Werte aus dem letzten Training, Abhaken mit automatischem Pausen-Timer (±15 s), Live-Dauer und -Volumen, Verlauf mit Detailansicht, „Als Plan speichern“ |
 | **Pläne** | 4 Startpläne (Ganzkörper, Push, Pull, Beine), Pläne anlegen/bearbeiten, Zielsätze/-wiederholungen/-gewicht, Reihenfolge per Drag & Drop |
 | **Übungen** | 36 Übungen nach Muskelgruppen, Suche, eigene Übungen, Detailansicht mit 1RM-Diagramm und Historie |
-| **Ernährung** | Tagebuch pro Tag mit Frühstück/Mittag/Abend/Snacks, 45 Lebensmittel (Nährwerte pro 100 g), Suche, Favoriten, „Zuletzt verwendet“, Portionsvorschläge, eigene Lebensmittel, Schnelleintrag, Einträge bearbeiten |
+| **Ernährung** | **Barcode-Scanner** (Kamera oder manuelle Eingabe, Abgleich mit eigenen Lebensmitteln und Open Food Facts), Tagebuch pro Tag mit Frühstück/Mittag/Abend/Snacks, 45 Lebensmittel (Nährwerte pro 100 g), Suche, Favoriten, „Zuletzt verwendet“, Portionsvorschläge, eigene Lebensmittel, Schnelleintrag, Einträge bearbeiten |
 | **Fortschritt** | Körpergewicht (Linien-Diagramm mit Zielgewicht und Antippen-Auswahl), Kraftentwicklung pro Übung (geschätztes 1RM und Top-Satz), wöchentliches Trainingsvolumen, Kalorien der letzten 14 Tage mit Ziellinie, jeweils Zeiträume 1M/3M/6M/1J/Alle |
 | **Profil** | Persönliche Daten, BMI, Ziel und Aktivität, Kalorien-/Makroempfehlung (Mifflin-St Jeor), Wochenziel, Satzpause, Demo-Daten laden, alles zurücksetzen |
 
@@ -43,6 +43,17 @@ Native iPhone-Fitness-App mit **Swift**, **SwiftUI**, **SwiftData** und **Swift 
 
 > Mit einer kostenlosen Apple-ID läuft die App 7 Tage. Danach einfach erneut aus Xcode installieren.
 
+### Barcode-Scanner testen
+
+- **Auf dem iPhone:** *Ernährung → Lebensmittel hinzufügen → Barcode scannen*. Beim ersten Mal fragt iOS nach der Kamera-Berechtigung. Halte den Barcode einer Verpackung in die Kamera. Er wird automatisch erkannt (EAN-13, EAN-8, UPC-E, ITF-14, Code 128).
+- **Im Simulator** gibt es keine Kamera. Gib den Barcode stattdessen im Feld darunter ein, z. B. `3017620422003` (Nutella).
+- **So wird gesucht:**
+  1. In deinen eigenen Lebensmitteln (sofort, offline)
+  2. Online bei [Open Food Facts](https://world.openfoodfacts.org) (freie Datenbank, kein Konto nötig)
+  3. Gibt es keinen Treffer, legst du das Lebensmittel mit dem Barcode selbst an. Beim nächsten Scan wird es dann direkt erkannt.
+- Gefundene Produkte kannst du vor dem Übernehmen prüfen und bearbeiten. Danach liegen sie lokal in deinen Lebensmitteln.
+- Der Live-Scanner braucht ein iPhone XS/XR oder neuer.
+
 ### Tests ausführen
 
 **⌘U** führt die Unit-Tests aus (`FitTrackTests`). Sie prüfen unter anderem:
@@ -51,6 +62,7 @@ Native iPhone-Fitness-App mit **Swift**, **SwiftUI**, **SwiftData** und **Swift 
 - Zahlen-Parsing mit Komma und Punkt
 - Startdaten, Training aus Plan und Demo-Daten
 - Ernährungs-Tagessummen
+- Auswertung der Open-Food-Facts-Antworten (inkl. kJ-Umrechnung) und Barcode-Prüfung
 
 ### Falls sich das Projekt nicht öffnen lässt
 
@@ -91,6 +103,7 @@ Neue Swift-Dateien legst du einfach in den Ordner `FitTrack/`. Xcode nimmt sie a
 ## Technische Hinweise
 
 - **Datenspeicherung:** SwiftData speichert lokal in der App-Sandbox. CloudKit ist ausdrücklich deaktiviert. Beim Löschen der App werden alle Daten gelöscht.
+- **Barcode-Scanner:** Er nutzt `DataScannerViewController` aus VisionKit. Für Open Food Facts wird nur die Barcode-Nummer übertragen. Es werden keine persönlichen Daten gesendet, und alles Übernommene wird lokal gespeichert. Ohne Internet funktionieren Scannen und Suchen in den eigenen Lebensmitteln weiterhin.
 - **Ernährungseinträge** kopieren die Nährwerte beim Erfassen. Spätere Änderungen oder das Löschen eines Lebensmittels verändern deinen Verlauf also nicht.
 - **1RM-Schätzung** nach Epley: `Gewicht × (1 + Wiederholungen / 30)`.
 - **Kalorienempfehlung:** Mifflin-St Jeor × Aktivitätsfaktor, je nach Ziel −500 / ±0 / +300 kcal. Protein richtet sich nach dem Körpergewicht, Fett liegt bei 25 % der Kalorien, den Rest bilden Kohlenhydrate.
