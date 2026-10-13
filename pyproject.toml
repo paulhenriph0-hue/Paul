@@ -1,0 +1,22 @@
+[project]
+name = "ai-memory-obsidian"
+version = "0.1.0"
+description = "Gemeinsames Gedächtnis für Claude und ChatGPT in einem Obsidian-Vault (iCloud) über MCP"
+requires-python = ">=3.10"
+dependencies = ["mcp>=2.2,<3", "uvicorn>=0.30"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+ai-memory = "ai_memory.server:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["ai_memory"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
